@@ -6,20 +6,19 @@
 //
 
 import SwiftUI
+import Charts
+import SwiftData
 
 struct MainMenuView: View {
     var body: some View {
         NavigationStack{
             VStack {
-                Text("Title").font(.largeTitle)
+                Text("FastWeight").font(.largeTitle)
                 Spacer()
-                
-                ZStack{
-                    Rectangle().fill(Color.gray).frame(width: 300, height: 200)
-                    Text("placeholder \nweight chart").font(.largeTitle)
-                }
-                
-                
+                weightChart()
+                    .padding(.horizontal)
+                    .frame(height: 150.0)
+                Text("Weight Tracker").font(.caption).padding(.bottom)
                 ScrollView {
                     ZStack{
                         Rectangle().fill(Color.gray).frame(width: 300, height: 150)
@@ -35,6 +34,19 @@ struct MainMenuView: View {
             .padding()    }
     }
 }
+
+struct weightChart: View {
+    @Query private var weights: [Weight]
+    var body: some View {
+        Chart(weights.sorted(by:{$0.datetaken < $1.datetaken})){
+            LineMark(
+                x: .value("Date", $0.datetaken),
+                y: .value("Weight", $0.weightvalue)
+            ).foregroundStyle(.green)
+        }
+    }
+}
+
 #Preview {
     MainMenuView()
         .modelContainer(for: Weight.self, inMemory: true)

@@ -16,7 +16,7 @@ struct WeightView: View {
     var body: some View {
         VStack {
             Text("Weight").font(.largeTitle)
-            DatePicker("Choose Date:", selection: $selectedDate, displayedComponents: .date).labelsHidden()
+            DatePicker("Choose Date:", selection: $selectedDate, displayedComponents: [.date, .hourAndMinute]).labelsHidden()
             HStack{
                 ZStack{
                     RoundedRectangle(cornerRadius: 10).fill(Color.teal)
@@ -62,7 +62,7 @@ struct WeightView: View {
                                 }
                             }
                         } label: {Text(weights[id].weightvalue.description)}
-                        Text(weights[id].datetaken.formatted(date: .numeric, time: .omitted))
+                        Text(weights[id].datetaken.formatted(date: .numeric,time: .shortened))
                     }
                 }
             }
