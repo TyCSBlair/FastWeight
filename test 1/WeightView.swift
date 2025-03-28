@@ -10,6 +10,7 @@ import SwiftData
 
 struct WeightView: View {
     @State private var selectedWeight: Int = 150
+//    @State private var selectedWeightDecimal: Int = 0
     @Query private var weights: [Weight]
     @Environment(\.modelContext) private var context
     @State private var selectedDate: Date = Date()
@@ -32,7 +33,15 @@ struct WeightView: View {
                         ForEach(0...300, id: \.self) { value in
                             Text(value.description)
                         }
-                    }
+                    }.padding(.trailing, -12.0)
+//                    Text(".")
+//                    Picker("Select Weight", selection: $selectedWeightDecimal) {
+//                        ForEach(0...9, id: \.self) { value in
+//                            Text(value.description)
+//                        }
+//                    }.padding(.horizontal, -12.0)
+                        
+                    
                     Text("LBs")
                         .multilineTextAlignment(.leading)
                         .padding(.leading, -2.0)
@@ -42,27 +51,28 @@ struct WeightView: View {
             Spacer()
             ScrollView {
                 LazyVGrid(columns: [GridItem(), GridItem()]){
+                    @State var sortedweights: [Weight] = weights.sorted(by: {$0.datetaken > $1.datetaken})
                     Text("Weight Recorded").font(.headline)
                     Text("Date Recorded").font(.headline)
-                    ForEach(0..<weights.count, id: \.self){ id in
+                    ForEach(0..<sortedweights.count, id: \.self){ id in
                         Menu{
                             Button(action: {
-                                context.delete(weights[id])
+                                context.delete(weights[findIndex(ID: sortedweights[id].id, weights: weights)])
                                
                             }){
                                 Text("0 (delete entry)")
                             }
                             ForEach(1...300, id: \.self) { value in
                                 Button(action: {
-                                    context.delete(weights[id])
-                                    context.insert(Weight(id:id, weightvalue: value, datetaken: weights[id].datetaken))
+                                    context.delete(weights[findIndex(ID: sortedweights[id].id, weights: weights)])
+                                    context.insert(Weight(id:sortedweights[id].id, weightvalue: value, datetaken: weights[sortedweights[id].id].datetaken))
                                     
                                 }){
                                     Text(value.description)
                                 }
                             }
-                        } label: {Text(weights[id].weightvalue.description)}
-                        Text(weights[id].datetaken.formatted(date: .numeric,time: .shortened))
+                        } label: {Text(sortedweights[id].weightvalue.description)}
+                        Text(sortedweights[id].datetaken.formatted(date: .numeric,time: .shortened))
                     }
                 }
             }
@@ -71,6 +81,15 @@ struct WeightView: View {
         }
     }
 
+func findIndex(ID: Int, weights: [Weight]) -> Int {
+    var index: Int = 0
+    for i in weights.indices{
+        if weights[i].id == ID{
+            index = i
+        }
+    }
+    return index
+}
 
 func findNewID(weights: [Weight]) -> Int {
     var newId: Int = 0
@@ -82,6 +101,7 @@ func findNewID(weights: [Weight]) -> Int {
     print(newId.description)
     return newId
 }
+
 
 #Preview {
     WeightView()
