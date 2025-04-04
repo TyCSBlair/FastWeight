@@ -6,43 +6,51 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct FastView: View {
     @State private var FastHours: Int = 0
     @State private var FastStartDate: Date = Date()
-    @State private var FastStartTime: Date = Date()
+    @Environment(\.modelContext) private var fastContext
     var body: some View {
         VStack(){
-            Text("Title").font(.largeTitle)
+            Text("Fasting").font(.largeTitle)
             LazyVGrid(columns: [GridItem(), GridItem()]){
                 Text("Fast Hours")
                 Text("Daily Eat Hours")
                 Picker("Select Fast Hours", selection: $FastHours){
                     ForEach(0...100, id: \.self){ value in
                         Text(value.description)
-                    }
+                    }	
                 }
                 //use function to check for daily eat hours
                 Text(CheckDailyEatHours(Hours: FastHours).description)
-                Text("Start Date")
-                Text("Start Time")
-                //put day picker here
-                DatePicker("", selection: $FastStartDate, displayedComponents: .date).labelsHidden()
-                //put time picker here
-                DatePicker("", selection: $FastStartTime, displayedComponents: .hourAndMinute).labelsHidden()
-                
-                ButtonView(buttonttext: "Clear")
-                ButtonView(buttonttext: "Save")
+                    
             }
-            Text("XX").font(.largeTitle)
+            Text("Set Fast Start Time")
+            DatePicker("", selection: $FastStartDate, displayedComponents: [.date, .hourAndMinute]).labelsHidden()
+            
+            Text("Eat: \((Date(timeInterval:Double(FastHours) * 3600, since:FastStartDate).formatted()))").font(.largeTitle).padding(.vertical, 20.0)
+            
+            Text("Hours Elapsed: \(Int(hoursElapsed(startDate: FastStartDate, currentDate: Date())).description)").font(.largeTitle).padding(.bottom, 20.0)
+            
+            Text(Int(hoursElapsed(startDate: Date(), currentDate: Date(timeInterval:Double(FastHours) * 3600, since:FastStartDate))).description).font(.largeTitle)
             + Text(" Hours Until You Can Break Fast").font(.largeTitle)
-                
-            Text("Eat:")
-                .font(.largeTitle)
-            + Text("").font(.largeTitle)
+            
+            Spacer()
             
         }
+        
+        
     }
+}
+
+func hoursElapsed(startDate: Date, currentDate: Date) -> TimeInterval{
+    var hours: TimeInterval = 0
+    
+    hours = currentDate.timeIntervalSinceReferenceDate - startDate.timeIntervalSinceReferenceDate
+    hours = hours / 3600
+    return hours
 }
 
 func CheckDailyEatHours(Hours: Int) -> Int {

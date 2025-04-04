@@ -10,6 +10,7 @@ import SwiftUI
 struct MealView: View {
     var body: some View {
         Text("meal test")
+        MoveButtonView(buttonttext: "search for food", buttondestination: FoodFinderView())
     }
 }
 
