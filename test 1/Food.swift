@@ -11,8 +11,17 @@ struct Food : Hashable, Codable {
     let fdcId: Int
     let description: String
     let brandOwner: String
+    let servingSize: Int
+    let servingSizeUnit: String
+    let foodNutrients: [Nutrient]
 }
 
 struct FoodsResponse : Hashable, Codable {
     let foods: [Food]
 }
+
+struct Nutrient: Hashable, Codable {
+    let nutrientId: Int
+    let value: Float
+}
+

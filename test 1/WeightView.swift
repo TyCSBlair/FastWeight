@@ -49,6 +49,7 @@ struct WeightView: View {
                     
             }
             Spacer()
+            Divider()
             ScrollView {
                 LazyVGrid(columns: [GridItem(), GridItem()]){
                     @State var sortedweights: [Weight] = weights.sorted(by: {$0.datetaken > $1.datetaken})
