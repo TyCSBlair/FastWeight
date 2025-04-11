@@ -6,13 +6,17 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct FoodFinderView: View {
+    
     @State private var searchText: String = ""
     @State private var storedSearchText: String = ""
     @State private var foodItems: [Food] = []
     @State private var page: Int = 1
     @State private var showNextButton: Bool = false
+    @State private var showPreviousButton: Bool = false
+    @Binding var selecteddate: Date
     var body: some View {
         VStack() {
             Text("Food Search").font(.largeTitle).padding(.bottom)
@@ -30,6 +34,7 @@ struct FoodFinderView: View {
                             storedSearchText = searchText
                             foodItems = await getFoodData(searchText: searchText, page: page)
                             showNextButton = true
+                            showPreviousButton = false
                         }
                     })
                 }
@@ -48,29 +53,43 @@ struct FoodFinderView: View {
 //                                    Text(foodItem.description).foregroundStyle(.secondary).frame(height: 30).onTapGesture {
 //                                        popupView(foodItem: foodItem)
 //                                    }
-                                    popupView(label: foodItem.description, foodItem: foodItem)
+                                    popupView(label: foodItem.description, foodItem: foodItem, date: selecteddate)
                                         .padding(.leading)
 //                                    Text(foodItem.brandOwner).foregroundStyle(.secondary).onTapGesture {
 //                                        popupView(foodItem: foodItem)
 //                                    }
-                                    popupView(label: foodItem.brandOwner, foodItem: foodItem)
+                                    popupView(label: foodItem.brandOwner, foodItem: foodItem, date: selecteddate)
                                         .padding(.trailing)
                                 }
                             }
                 Spacer()
-                if showNextButton {
-                    Divider()
-                        .padding(.horizontal)
-                    Button("Next Page"){
-                        Task{
-                            foodItems = await getFoodData(searchText: storedSearchText, page: page+1)
-                            page = page+1
-                            
-                        }
-                    }
-                }
+                
             }
-            
+            Divider()
+            HStack{
+                if showNextButton {
+                                Button("Next Page"){
+                                                   Task{
+                                                       foodItems = await getFoodData(searchText: storedSearchText, page: page+1)
+                                                       page = page+1
+                                                       showPreviousButton = true
+                                                   }
+                                               }
+                                           }
+                                           if showPreviousButton {
+                                               Button("Previous Page"){
+                                                   Task{
+                                                       foodItems = await getFoodData(searchText: storedSearchText, page: page-1)
+                                                       page = page-1
+                                                       if page == 1 {
+                                                           showPreviousButton = false
+                                                       }
+                                                   }
+                                               }
+                                           }
+            }
+            .frame(height: /*@START_MENU_TOKEN@*/15.0/*@END_MENU_TOKEN@*/)
+           
             
         }
         
@@ -85,7 +104,7 @@ var APIkey: String = "XBE7L00LGr70XHL9IbbPfSBorCMSYewbaC5nbgKo"
 func buildUrl (searchText: String, pageNumber: Int) -> String {
     let newText  = searchText.replacingOccurrences(of: " ", with: "%20")
     print(newText)
-    let endURL : String = "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=\(APIkey)&query=\(newText)&pageNumber=\(pageNumber)&sortBy=dataType.keyword"
+    let endURL : String = "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=\(APIkey)&query=\(newText)&dataType=Branded&pageNumber=\(pageNumber)&sortBy=dataType.keyword"
     print(endURL)
     return endURL
 }
@@ -109,13 +128,27 @@ func findCalories(nutrients: [Nutrient]) -> String {
     }
     return String(calories)
 }
+// calories = 1008, protein = 1003, total lipids = 1004, carbs = 1005, fiber = 1079
+func findNutrient(nutrients: [Nutrient], nutrientId: Int) -> Float {
+    var nutrient : Float = 0
+    for i in nutrients {
+        if i.nutrientId == nutrientId {
+            nutrient = Float(i.value)
+        }
+    }
+    return nutrient
+}
 
 
 
 struct popupView: View {
-    @State var showPopup: Bool = false
+    @State private var showPopup: Bool = false
+    @Query private var StoredFoods: [StoredFood]
+    @Environment(\.modelContext) private var context2
+    @State private var servings: Int = 1
     var label: String
     var foodItem: Food
+    var date: Date
     var body: some View {
         Button(label){showPopup.toggle()}.frame(height: 50)
             .popover(isPresented: $showPopup) {
@@ -124,11 +157,41 @@ struct popupView: View {
                         Text("Brand Name: \(foodItem.brandOwner)").frame(height: 50)
                         Text("Serving Size: \(String(foodItem.servingSize))\(foodItem.servingSizeUnit)").frame(height: 20)
                         Text("Calories: \(findCalories(nutrients: foodItem.foodNutrients))").frame(height: 20)
+                    
+                    HStack{
+                        Picker ("Servings had:", selection: $servings){
+                            ForEach (1...10, id: \.self){ value in
+                                Text(value.description)
+                            }
+                        }.frame(width: 70)
+                        Button(action:{
+                            context2.insert(foodToStoredFood(id: findNewId(foods: StoredFoods), date: date, food: foodItem, servings: Float(servings)))
+                        }){
+                            RoundedRectangle(cornerRadius: 10).frame(width:90, height: 30).foregroundStyle(.blue).overlay(Text("Add Food").foregroundStyle(.white))
+                        }
+                        
+                    }
                     }.padding().presentationCompactAdaptation(.popover)
             }
     }
 }
+func findNewId(foods: [StoredFood]) -> Int {
+    var newid: Int = 0
+    for i in foods{
+        if i.id >= newid{
+            newid = i.id + 1
+        }
+    }
+    return newid
+}
 
 #Preview {
-    FoodFinderView()
+    struct Preview: View{
+        @State var fakedate: Date = Date()
+        var body: some View {
+            FoodFinderView(selecteddate: $fakedate)
+                    .modelContainer(for: StoredFood.self, inMemory: true)
+        }
+    }
+    return Preview()
 }
