@@ -15,12 +15,12 @@ class StoredFood: Identifiable {
     var fdcId: Int
     var name: String
     var brandOwner: String
-    var servingSize: Int
+    var servingSize: Float
     var servingSizeUnit: String
     var foodNutrients: [Nutrient]
     var servingsConsumed: Float
     
-    init(id: Int, dateStored: Date, fdcId: Int, name: String, brandOwner: String, servingSize: Int, servingSizeUnit: String, foodNutrients: [Nutrient], servingsConsumed: Float) {
+    init(id: Int, dateStored: Date, fdcId: Int, name: String, brandOwner: String, servingSize: Float, servingSizeUnit: String, foodNutrients: [Nutrient], servingsConsumed: Float) {
         self.id = id
         self.dateStored = dateStored
         self.fdcId = fdcId

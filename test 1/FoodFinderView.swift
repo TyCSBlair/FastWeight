@@ -104,7 +104,7 @@ var APIkey: String = "XBE7L00LGr70XHL9IbbPfSBorCMSYewbaC5nbgKo"
 func buildUrl (searchText: String, pageNumber: Int) -> String {
     let newText  = searchText.replacingOccurrences(of: " ", with: "%20")
     print(newText)
-    let endURL : String = "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=\(APIkey)&query=\(newText)&dataType=Branded&pageNumber=\(pageNumber)&sortBy=dataType.keyword"
+    let endURL : String = "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=\(APIkey)&query=\(newText)&dataType=Branded&pageSize=20&pageNumber=\(pageNumber)&sortBy=dataType.keyword"
     print(endURL)
     return endURL
 }
@@ -166,6 +166,7 @@ struct popupView: View {
                         }.frame(width: 70)
                         Button(action:{
                             context2.insert(foodToStoredFood(id: findNewId(foods: StoredFoods), date: date, food: foodItem, servings: Float(servings)))
+                            showPopup = false
                         }){
                             RoundedRectangle(cornerRadius: 10).frame(width:90, height: 30).foregroundStyle(.blue).overlay(Text("Add Food").foregroundStyle(.white))
                         }
