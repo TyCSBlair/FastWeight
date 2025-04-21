@@ -88,9 +88,9 @@ struct macrosNotification: View {
 struct fastSchedule: View {
     @Query private var fastData: [FastData]
     var body: some View {
-        var FastHours: Int = fastData.first?.fastDuration ?? 0
-        var FastStartDate: Date = fastData.first?.fastStartTime ?? Date()
-        var HoursLeft: Int = Int(hoursElapsed(startDate: Date(), currentDate: Date(timeInterval:Double(FastHours) * 3600, since:FastStartDate)))
+        let FastHours: Int = fastData.first?.fastDuration ?? 0
+        let FastStartDate: Date = fastData.first?.fastStartTime ?? Date()
+        let HoursLeft: Int = Int(hoursElapsed(startDate: Date(), currentDate: Date(timeInterval:Double(FastHours) * 3600, since:FastStartDate)))
         ZStack{
             Rectangle().foregroundStyle(.gray)
             if fastData.isEmpty {
