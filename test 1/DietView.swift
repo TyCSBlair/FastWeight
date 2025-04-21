@@ -31,7 +31,7 @@ struct DietView: View {
                 CarbohydrateUpperBound = 100 - (FatValue + ProteinValue)
             }
         }
-        Text("diet test").font(.largeTitle)
+        Text("Macros").font(.largeTitle)
         Spacer()
         TextField("", text: $Calories, prompt: Text("Input Calorie Goal (kCal)")).keyboardType(.numberPad).padding([.leading, .bottom, .trailing]).labelsHidden().frame(width: 218, height: 60.0).background(RoundedRectangle(cornerRadius: 10).padding(.bottom).foregroundColor(Color.gray.opacity(0.2)))
         Text("Protein Value")+Text(" (\(String(format: "%.01f",ProteinUpperBound))% Max Value)")
