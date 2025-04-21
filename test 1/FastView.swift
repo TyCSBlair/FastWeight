@@ -9,10 +9,23 @@ import SwiftUI
 import SwiftData
 
 struct FastView: View {
+    @Query private var data : [FastData]
     @State private var FastHours: Int = 0
     @State private var FastStartDate: Date = Date()
     @Environment(\.modelContext) private var fastContext
     var body: some View {
+        Text("")
+            .frame(width: 0.0, height: 0.0).onAppear{
+                if !data.isEmpty{
+                    FastHours = data.first!.fastDuration
+                    FastStartDate = data.first!.fastStartTime
+                    if Int(hoursElapsed(startDate: Date(), currentDate: Date(timeInterval:Double(FastHours) * 3600, since:FastStartDate))) < 0{
+                        fastContext.delete(data.first!)
+                        FastHours = 0
+                        FastStartDate = Date()
+                    }
+                }
+            }
         VStack(){
             Text("Fasting").font(.largeTitle)
             LazyVGrid(columns: [GridItem(), GridItem()]){
@@ -39,6 +52,38 @@ struct FastView: View {
             
             Spacer()
             
+            Button(action: {
+                if !data.isEmpty{
+                    fastContext.delete(data.first!)
+                }
+                fastContext.insert(FastData(fastStartTime: FastStartDate, fastDuration: FastHours))
+            }){
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.blue)
+                    .frame(width: 300, height: 100)
+                    .overlay(
+                        Text("Save")
+                            .font(.title)
+                            .foregroundColor(.white)
+                    )
+            }
+            Button(action: {
+                if !data.isEmpty{
+                    fastContext.delete(data.first!)
+                }
+                FastHours = 0
+                FastStartDate = Date()
+            }){
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.red)
+                    .frame(width: 300, height: 100)
+                    .overlay(
+                        Text("Clear")
+                            .font(.title)
+                            .foregroundColor(.white)
+                    )
+            }
+            
         }
         
         
@@ -64,5 +109,5 @@ func CheckDailyEatHours(Hours: Int) -> Int {
 }
 
 #Preview {
-    FastView()
+    FastView().modelContainer(for: FastData.self, inMemory: true)
 }

@@ -10,7 +10,7 @@ import SwiftData
 
 struct ContentView: View {
     var body: some View {
-        MainMenuView().modelContainer(for: [Weight.self, StoredFood.self])
+        MainMenuView().modelContainer(for: [Weight.self, StoredFood.self, Macros.self, FastData.self])
     }
 }
 
@@ -49,5 +49,5 @@ struct ButtonView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: [Weight.self, StoredFood.self], inMemory: true)
+        .modelContainer(for: [Weight.self, StoredFood.self, Macros.self, FastData.self], inMemory: true)
 }

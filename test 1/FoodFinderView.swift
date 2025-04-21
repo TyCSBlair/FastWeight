@@ -104,7 +104,7 @@ var APIkey: String = "XBE7L00LGr70XHL9IbbPfSBorCMSYewbaC5nbgKo"
 func buildUrl (searchText: String, pageNumber: Int) -> String {
     let newText  = searchText.replacingOccurrences(of: " ", with: "%20")
     print(newText)
-    let endURL : String = "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=\(APIkey)&query=\(newText)&dataType=Branded&pageSize=20&pageNumber=\(pageNumber)&sortBy=dataType.keyword"
+    let endURL : String = "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=\(APIkey)&query=\(newText)&pageSize=20&pageNumber=\(pageNumber)&sortBy=dataType.keyword"
     print(endURL)
     return endURL
 }
