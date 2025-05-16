@@ -43,8 +43,9 @@ struct MealView: View {
                                 }){
                                     Image(systemName: "trash")
                                 }
-                                Text(food.name)
-                                    .multilineTextAlignment(.center)
+                                if food.dataType == "Survey (FNDDS)" {
+                                    Text("\(food.name) - \(food.portion.disseminationText)").multilineTextAlignment(.center)
+                                } else {Text(food.name).multilineTextAlignment(.center)}
                                     
                             }
                             
@@ -61,7 +62,7 @@ struct MealView: View {
                             }label:{Text(String(food.servingsConsumed))
                                 .multilineTextAlignment(.center)}
                             .padding()
-                            Text(String(Float(findCalories(nutrients: food.foodNutrients))!*food.servingsConsumed))
+                            Text(String(format: "%.1f",Float(findCalories(nutrients: food.foodNutrients))!*food.servingsConsumed / (100/food.servingSize)))
                                 .multilineTextAlignment(.center)
                         }
                     }.onChange(of: StoredFoods2){ reader.scrollTo(0)
@@ -84,7 +85,7 @@ struct MealView: View {
                 let carbs = findTotalNutrient(foods: StoredFoods2, nutrientId: 1005)
                 let protein = findTotalNutrient(foods: StoredFoods2, nutrientId: 1003)
                 let calories = findTotalCalories(foods: StoredFoods2)
-                calorieGoalpopup(goal:String(diet.first?.calories ?? 0), label: Text("\(String(calories))kcal").foregroundStyle(checkAgainstMacros(value1: Double(calories), value2: Double(diet.first?.calories ?? 0))))
+                calorieGoalpopup(goal:String(diet.first?.calories ?? 0), label: Text("\(String(format: "%.01f",calories))kcal").foregroundStyle(checkAgainstMacros(value1: Double(calories), value2: Double(diet.first?.calories ?? 0))))
                 nutrientGoalpopup(nutrient: "Fat", goal:String(format: "%.01f",(diet.first?.calories ?? 0)*(Float(diet.first?.fat ?? 0)/100)/9), label: Text("\(String(format: "%.01f", fat))g").foregroundStyle(checkAgainstMacros(value1: Double(fat) * 9, value2: (Double(diet.first?.fat ?? 0)/100)*Double(diet.first?.calories ?? 0))))
                 nutrientGoalpopup(nutrient: "Carb", goal:String(format: "%.01f",(diet.first?.calories ?? 0)*(Float(diet.first?.carbohydrates ?? 0)/100)/4), label: Text("\(String(format: "%.01f", carbs))g").foregroundStyle(checkAgainstMacros(value1: Double(carbs) * 4, value2: (Double(diet.first?.carbohydrates ?? 0)/100)*Double(diet.first?.calories ?? 0))))
                 nutrientGoalpopup(nutrient: "Protein", goal:String(format: "%.01f",(diet.first?.calories ?? 0)*(Float(diet.first?.protein ?? 0)/100)/4), label: Text("\(String(format: "%.01f", protein))g").foregroundStyle(checkAgainstMacros(value1: Double(protein) * 4, value2: (Double(diet.first?.protein ?? 0)/100)*Double(diet.first?.calories ?? 0))))
@@ -168,7 +169,7 @@ func makeNewList(foods: [StoredFood], date: Date)->[StoredFood]{
 func findTotalCalories(foods: [StoredFood]) -> Float {
     var totalcal: Float = 0
     for i in foods {
-        totalcal = Float(findCalories(nutrients: i.foodNutrients))!*i.servingsConsumed + totalcal
+        totalcal = (Float(findCalories(nutrients: i.foodNutrients))! / (100/i.servingSize))*i.servingsConsumed + totalcal
     }
     return totalcal
 }
@@ -177,7 +178,7 @@ func findTotalCalories(foods: [StoredFood]) -> Float {
 func findTotalNutrient(foods: [StoredFood], nutrientId: Int) -> Float {
     var totalcal: Float = 0
     for i in foods {
-        totalcal = findNutrient(nutrients: i.foodNutrients, nutrientId: nutrientId)*i.servingsConsumed + totalcal
+        totalcal = findNutrient(nutrients: i.foodNutrients, nutrientId: nutrientId)*i.servingsConsumed*(1/(100/i.servingSize)) + totalcal
     }
     return totalcal
 }

@@ -29,22 +29,49 @@ struct MainMenuView: View {
                     MoveButtonView(buttonttext:"Record Meal", buttondestination: MealView())
                     MoveButtonView(buttonttext:"Set Macro Goals", buttondestination: DietView())
                     MoveButtonView(buttonttext:"Set Fasting Schedule", buttondestination: FastView())
-                }
+                    MoveButtonView(buttonttext: "Record Blood Pressure", buttondestination: BloodPressureView())
+                    MoveButtonView(buttonttext: "Fasting Glucose Levels", buttondestination: GlucoseView())
+                }.scrollIndicators(.visible)
             }
             .padding()    }
     }
 }
 
 struct weightChart: View {
+    @State private var showPopup: Bool = false
     @Query private var weights: [Weight]
+    @State var sortedWeights: [Weight] = []
+
     var body: some View {
         
-        Chart(weights.sorted(by:{$0.datetaken < $1.datetaken})){
+        Chart(sortedWeights){
             LineMark(
                 x: .value("Date", $0.datetaken),
                 y: .value("Weight", $0.weightvalue)
             ).foregroundStyle(.green)
-        }.chartYScale(domain: [findMinWeight(weights: weights) - 10, findMaxWeight(weights: weights) + 10])
+        }.chartYScale(domain: [findMinWeight(weights: weights) - 10, findMaxWeight(weights: weights) + 10]).onTapGesture{
+//            if !weights.isEmpty {
+//                showPopup.toggle()
+//            }
+        }.onAppear(){sortedWeights = weights.sorted(by: {$0.datetaken < $1.datetaken})}.popover(isPresented: $showPopup){
+            domainView(sortedWeights: $sortedWeights)
+        }
+    }
+}
+
+struct domainView: View {
+    @Binding var sortedWeights: [Weight]
+    var body: some View {
+        @State var minDate: Date = sortedWeights.first!.datetaken
+        @State var maxDate: Date = sortedWeights.last!.datetaken
+        Text("Modify Date Range of Chart")
+        DatePicker("Minimum Date:", selection: $minDate, displayedComponents: [.date, .hourAndMinute]).padding()
+        DatePicker("Maximum Date:", selection: $maxDate, displayedComponents: [.date, .hourAndMinute]).padding()
+        Button(action:{
+            sortedWeights = getFilteredWeights(data: sortedWeights, minDate: minDate, maxDate: maxDate)
+        }){
+            Text("Save")
+        }
     }
 }
 
@@ -105,6 +132,16 @@ struct fastSchedule: View {
             
         }.frame(width: 300)
     }
+}
+
+func getFilteredWeights(data: [Weight], minDate: Date, maxDate: Date) -> [Weight] {
+    var newList: [Weight] = []
+    for i in data {
+        if i.datetaken >= minDate && i.datetaken <= maxDate {
+            newList.append(i)
+        }
+    }
+    return newList
 }
 
 func findMinWeight( weights: [Weight]) -> Int {

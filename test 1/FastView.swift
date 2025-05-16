@@ -35,8 +35,9 @@ struct FastView: View {
                                 Picker("Select Fast Hours", selection: $FastHours){
                                     ForEach(0...100, id: \.self){ value in
                                         Text(value.description)
+                                            .lineLimit(1)
                                     }
-                                }
+                                }.lineLimit(1)
                                 //use function to check for daily eat hours
                                 Text(CheckDailyEatHours(Hours: FastHours).description)
                                     

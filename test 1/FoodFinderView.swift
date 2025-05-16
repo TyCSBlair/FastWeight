@@ -58,7 +58,7 @@ struct FoodFinderView: View {
 //                                    Text(foodItem.brandOwner).foregroundStyle(.secondary).onTapGesture {
 //                                        popupView(foodItem: foodItem)
 //                                    }
-                                    popupView(label: foodItem.brandOwner, foodItem: foodItem, date: selecteddate)
+                                    popupView(label: foodItem.brandOwner ?? "Unbranded Item", foodItem: foodItem, date: selecteddate)
                                         .padding(.trailing)
                                 }
                             }
@@ -101,10 +101,13 @@ struct FoodFinderView: View {
 
 var APIkey: String = "XBE7L00LGr70XHL9IbbPfSBorCMSYewbaC5nbgKo"
 
-func buildUrl (searchText: String, pageNumber: Int) -> String {
+func buildUrl (searchText: String, pageNumber: Int, type: Bool) -> String {
     let newText  = searchText.replacingOccurrences(of: " ", with: "%20")
     print(newText)
-    let endURL : String = "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=\(APIkey)&query=\(newText)&pageSize=20&pageNumber=\(pageNumber)&sortBy=dataType.keyword"
+    let surveyString : String  = "&dataType=Survey%20(FNDDS)"
+    let brandedString : String = "&dataType=Branded"
+    let dataType : String = if type {surveyString} else {brandedString}
+    let endURL : String = "https://api.nal.usda.gov/fdc/v1/foods/search?api_key=\(APIkey)&query=\(newText)\(dataType)&pageSize=20&pageNumber=\(pageNumber)&sortBy=dataType.keyword"
     print(endURL)
     return endURL
 }
@@ -112,10 +115,14 @@ func buildUrl (searchText: String, pageNumber: Int) -> String {
 func getFoodData(searchText: String, page: Int) async -> [Food] {
     var newFoodItems: [Food] = []
     
-    guard let newFoodItems2: FoodsResponse = await WebService().downloadData(fromURL: buildUrl(searchText: searchText, pageNumber: page)) else {
+    guard let newFoodItems2: FoodsResponse = await WebService().downloadData(fromURL: buildUrl(searchText: searchText, pageNumber: page, type: true)) else {
         return newFoodItems
     }
     newFoodItems = newFoodItems2.foods
+    guard let newFoodItems3: FoodsResponse = await WebService().downloadData(fromURL: buildUrl(searchText: searchText, pageNumber: page, type: false)) else {
+        return newFoodItems
+    }
+    newFoodItems = newFoodItems + newFoodItems3.foods
     return newFoodItems
 }
 
@@ -146,53 +153,98 @@ struct popupView: View {
     @Query private var StoredFoods: [StoredFood]
     @Environment(\.modelContext) private var context2
     @State private var servings: Int = 1
+    @State var selectedPortion: identifiableFoodPortion?
+    
     var label: String
     var foodItem: Food
     var date: Date
     var body: some View {
         Button(label){showPopup.toggle()}.frame(height: 50)
-            .popover(isPresented: $showPopup) {
-                VStack(alignment: .leading){
+            .popover(isPresented: $showPopup){
+                if foodItem.dataType == "Branded" {
+                    let calories: Double = Double(findCalories(nutrients: foodItem.foodNutrients))! / (100 / Double(foodItem.servingSize ?? 0))
+                    VStack(alignment: .leading){
                         Text("Food Name: \(foodItem.description)").frame(height: 50)
-                        Text("Brand Name: \(foodItem.brandOwner)").frame(height: 50)
-                        Text("Serving Size: \(String(foodItem.servingSize))\(foodItem.servingSizeUnit)").frame(height: 20)
-                        Text("Calories: \(findCalories(nutrients: foodItem.foodNutrients))").frame(height: 20)
-                    
-                    HStack{
-                        Picker ("Servings had:", selection: $servings){
-                            ForEach (1...10, id: \.self){ value in
-                                Text(value.description)
-                            }
-                        }.frame(width: 70)
-                        Button(action:{
-                            context2.insert(foodToStoredFood(id: findNewId(foods: StoredFoods), date: date, food: foodItem, servings: Float(servings)))
-                            showPopup = false
-                        }){
-                            RoundedRectangle(cornerRadius: 10).frame(width:90, height: 30).foregroundStyle(.blue).overlay(Text("Add Food").foregroundStyle(.white))
-                        }
+                        Text("Brand Name: \(foodItem.brandOwner ?? "")").frame(height: 50)
+                        Text("Serving Size: \(String(foodItem.servingSize ?? 0))\(foodItem.servingSizeUnit ?? "")").frame(height: 20)
+                        Text("Calories: \(String(format: "%.1f", calories)) kcal").frame(height: 20)
                         
-                    }
+                        HStack{
+                            Text("Servings:")
+                            Picker ("Servings had:", selection: $servings){
+                                ForEach (1...10, id: \.self){ value in
+                                    Text(value.description)
+                                }
+                            }.frame(width: 70)
+                            Button(action:{
+                                context2.insert(foodToStoredFood(id: findNewId(foods: StoredFoods), date: date, food: foodItem, servings: Float(servings), portion: nil))
+                                showPopup = false
+                            }){
+                                RoundedRectangle(cornerRadius: 10).frame(width:90, height: 30).foregroundStyle(.blue).overlay(Text("Add Food").foregroundStyle(.white))
+                            }
+                            
+                        }
                     }.padding().presentationCompactAdaptation(.popover)
+                } else if foodItem.dataType == "Survey (FNDDS)"{
+                    let portions: [identifiableFoodPortion] = portionsToIdentifiable(portions:foodItem.foodMeasures!)
+                    VStack(alignment: .leading){
+                        Text("Food Name: \(foodItem.description)").frame(height:50).onAppear(){selectedPortion = portions[0]}
+                        HStack{
+                            Text("Choose Portion Size:")
+                            surveyView(selectedPortion: $selectedPortion, portions:portions)
+                            }
+                        HStack{
+                            Text("Portions Had:")
+                            Picker ("Portions Had:", selection: $servings){
+                                ForEach (1...100, id: \.self){ value in
+                                    Text(value.description)
+                                }
+                            }
+                        }
+                            Button(action:{
+                                print(selectedPortion!.disseminationText)
+                                context2.insert(foodToStoredFood(id: findNewId(foods: StoredFoods), date: date, food: foodItem, servings: Float(servings), portion: identifiableToFoodPortion(portion: selectedPortion!)))
+                                showPopup.toggle()
+                            }){
+                                RoundedRectangle(cornerRadius:12).frame(width:100, height:50).foregroundStyle(.blue).overlay(Text("Submit").foregroundStyle(.white))
+                            }
+                    }.padding().presentationCompactAdaptation(.popover)
+                    }
+                }
             }
     }
-}
-func findNewId(foods: [StoredFood]) -> Int {
-    var newid: Int = 0
-    for i in foods{
-        if i.id >= newid{
-            newid = i.id + 1
+
+struct surveyView: View {
+    @Binding var selectedPortion: identifiableFoodPortion?
+    let portions: [identifiableFoodPortion]
+    var body: some View {
+        Picker("aaaaa", selection: $selectedPortion){
+            ForEach(portions, id: \.self){ portion in
+                Text("\(portion.disseminationText) (\(String(format: "%.1f", portion.gramWeight))g)").tag(portion as identifiableFoodPortion?)
+            }
         }
+
     }
-    return newid
 }
 
-#Preview {
-    struct Preview: View{
-        @State var fakedate: Date = Date()
-        var body: some View {
-            FoodFinderView(selecteddate: $fakedate)
-                    .modelContainer(for: StoredFood.self, inMemory: true)
+    func findNewId(foods: [StoredFood]) -> Int {
+        var newid: Int = 0
+        for i in foods{
+            if i.id >= newid{
+                newid = i.id + 1
+            }
         }
+        return newid
     }
-    return Preview()
-}
+    
+    #Preview {
+        struct Preview: View  {
+            @State var fakedate: Date = Date()
+            var body: some View {
+                FoodFinderView(selecteddate: $fakedate)
+                    .modelContainer(for: StoredFood.self, inMemory: true)
+            }
+        }
+        return Preview()
+    }
+

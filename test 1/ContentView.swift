@@ -10,7 +10,7 @@ import SwiftData
 
 struct ContentView: View {
     var body: some View {
-        MainMenuView().modelContainer(for: [Weight.self, StoredFood.self, Macros.self, FastData.self])
+        MainMenuView().modelContainer(for: [Weight.self, StoredFood.self, Macros.self, FastData.self, BloodPressureData.self, GlucoseData.self])
     }
 }
 
@@ -20,12 +20,13 @@ struct MoveButtonView<Content: View>: View {
     var body: some View {
         NavigationLink(destination: buttondestination){
             ZStack{
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.teal)
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(Color.blue)
                     .frame(width: 300, height: 60)
                 Text(buttonttext)
                     .font(.title)
-                    .foregroundColor(.white)
+                    .fontWeight(.light)
+                    .foregroundColor(Color.white)
                     .padding()
                 }
             }
@@ -36,7 +37,7 @@ struct ButtonView: View {
     var buttonttext : String
     var body: some View{
         ZStack{
-            RoundedRectangle(cornerRadius: 20)
+            RoundedRectangle(cornerRadius: 5)
                 .fill(Color.teal)
                 .frame(width: 130, height: 60)
             Text(buttonttext)
