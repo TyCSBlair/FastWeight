@@ -50,9 +50,9 @@ struct weightChart: View {
                 y: .value("Weight", $0.weightvalue)
             ).foregroundStyle(.green)
         }.chartYScale(domain: [findMinWeight(weights: weights) - 10, findMaxWeight(weights: weights) + 10]).onTapGesture{
-//            if !weights.isEmpty {
-//                showPopup.toggle()
-//            }
+            if !weights.isEmpty {
+                showPopup.toggle()
+            }
         }.onAppear(){sortedWeights = weights.sorted(by: {$0.datetaken < $1.datetaken})}.popover(isPresented: $showPopup){
             domainView(sortedWeights: $sortedWeights)
         }
@@ -61,12 +61,16 @@ struct weightChart: View {
 
 struct domainView: View {
     @Binding var sortedWeights: [Weight]
+    @State private var minDate: Date = Date()
+    @State private var maxDate: Date = Date()
     var body: some View {
-        @State var minDate: Date = sortedWeights.first!.datetaken
-        @State var maxDate: Date = sortedWeights.last!.datetaken
         Text("Modify Date Range of Chart")
-        DatePicker("Minimum Date:", selection: $minDate, displayedComponents: [.date, .hourAndMinute]).padding()
-        DatePicker("Maximum Date:", selection: $maxDate, displayedComponents: [.date, .hourAndMinute]).padding()
+        DatePicker("Minimum Date:", selection: $minDate, displayedComponents: [.date, .hourAndMinute]).padding().onAppear {
+            minDate = sortedWeights.first!.datetaken
+        }
+        DatePicker("Maximum Date:", selection: $maxDate, displayedComponents: [.date, .hourAndMinute]).padding().onAppear {
+            maxDate = sortedWeights.last!.datetaken
+        }
         Button(action:{
             sortedWeights = getFilteredWeights(data: sortedWeights, minDate: minDate, maxDate: maxDate)
         }){
@@ -120,7 +124,7 @@ struct fastSchedule: View {
         let HoursLeft: Int = Int(hoursElapsed(startDate: Date(), currentDate: Date(timeInterval:Double(FastHours) * 3600, since:FastStartDate)))
         ZStack{
             Rectangle().foregroundStyle(.gray)
-            if fastData.isEmpty {
+            if fastData.isEmpty || FastStartDate > Date(){
                 Text("Not Currently Fasting")
             } else {
                 if HoursLeft < 0 {

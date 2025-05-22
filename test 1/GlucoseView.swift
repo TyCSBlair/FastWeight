@@ -72,19 +72,6 @@ struct GlucoseView: View {
     }
 }
 
-//struct weightChart: View {
-//    @Query private var glucoseData: [Weight]
-//    var body: some View {
-//        
-//        Chart(weights.sorted(by:{$0.datetaken < $1.datetaken})){
-//            LineMark(
-//                x: .value("Date", $0.datetaken),
-//                y: .value("Weight", $0.weightvalue)
-//            ).foregroundStyle(.green)
-//        }.chartYScale(domain: [findMinWeight(weights: weights) - 10, findMaxWeight(weights: weights) + 10])
-//    }
-//}
-
 func findNewGlucoseID(data: [GlucoseData]) -> Int {
     var newID: Int = 0
     for i in data {

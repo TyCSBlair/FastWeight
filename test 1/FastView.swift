@@ -28,7 +28,6 @@ struct FastView: View {
             }
         VStack(){
             Text("Fasting").font(.largeTitle)
-            ScrollView{
                 LazyVGrid(columns: [GridItem(), GridItem()]){
                                 Text("Fast Hours")
                                 Text("Daily Eat Hours")
@@ -43,15 +42,19 @@ struct FastView: View {
                                     
                             }
                             Text("Set Fast Start Time")
-                            DatePicker("", selection: $FastStartDate, displayedComponents: [.date, .hourAndMinute]).labelsHidden()
+                DatePicker("", selection: $FastStartDate, displayedComponents: [.date, .hourAndMinute]).padding(.bottom).labelsHidden()
                             
-                            Text("Eat: \((Date(timeInterval:Double(FastHours) * 3600, since:FastStartDate).formatted()))").font(.largeTitle).padding(.vertical, 20.0)
+
                             
-                            Text("Hours Elapsed: \(Int(hoursElapsed(startDate: FastStartDate, currentDate: Date())).description)").font(.largeTitle).padding(.bottom, 20.0)
-                            
-                            Text(Int(hoursElapsed(startDate: Date(), currentDate: Date(timeInterval:Double(FastHours) * 3600, since:FastStartDate))).description).font(.largeTitle)
-                            + Text(" Hours Until You Can Break Fast").font(.largeTitle)
-                            
+                            if FastStartDate < Date(){
+                                Text("Eat: \((Date(timeInterval:Double(FastHours) * 3600, since:FastStartDate).formatted()))").font(.largeTitle).padding(.vertical, 20.0)
+                                
+                                Text("Hours Elapsed: \(Int(hoursElapsed(startDate: FastStartDate, currentDate: Date())).description)").font(.largeTitle).padding(.bottom, 20.0)
+                                
+                                Text(Int(hoursElapsed(startDate: Date(), currentDate: Date(timeInterval:Double(FastHours) * 3600, since:FastStartDate))).description).font(.largeTitle)
+                                + Text(" Hours Until You Can Break Fast").font(.largeTitle)
+                            }
+                
                             Spacer()
                             
                             Button(action: {
@@ -88,7 +91,6 @@ struct FastView: View {
             }
             
             
-        }
         
         
     }
