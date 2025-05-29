@@ -11,7 +11,7 @@ import Charts
 
 struct WeightView: View {
     @State private var selectedWeight: Int = 150
-//    @State private var selectedWeightDecimal: Int = 0
+    @State private var selectedWeightDecimal: Int = 0
     @Query private var weights: [Weight]
     @Environment(\.modelContext) private var context
     @State private var selectedDate: Date = Date()
@@ -29,7 +29,12 @@ struct WeightView: View {
                         .frame(width: 200, height: 80)
                     Text("Add Weight").font(.title).foregroundColor(Color.white)
                 }.onTapGesture{
-                    context.insert(Weight(id:findNewID(weights: weights), weightvalue: selectedWeight, datetaken: selectedDate))
+                    context.insert(Weight(id:findNewID(weights: weights), weightvalue: (Float(selectedWeightDecimal)/10+Float(selectedWeight)), datetaken: selectedDate))
+                    print(selectedWeight)
+                    print(selectedWeightDecimal)
+                    print(Float(selectedWeightDecimal)/10)
+                    print(String(Float(selectedWeightDecimal)/10+Float(selectedWeight)))
+                    print(String(((Float(selectedWeightDecimal)/10+Float(selectedWeight)).truncatingRemainder(dividingBy: 1)*10).rounded()))
                     
                 }
                 
@@ -39,12 +44,12 @@ struct WeightView: View {
                             Text(value.description)
                         }
                     }.padding(.trailing, -12.0)
-//                    Text(".")
-//                    Picker("Select Weight", selection: $selectedWeightDecimal) {
-//                        ForEach(0...9, id: \.self) { value in
-//                            Text(value.description)
-//                        }
-//                    }.padding(.horizontal, -12.0)
+                    Text(".")
+                    Picker("Select Weight Decimal", selection: $selectedWeightDecimal) {
+                        ForEach(0...9, id: \.self) { value in
+                            Text(value.description)
+                        }
+                    }.padding(.horizontal, -12.0)
                         
                     
                     Text("LBs")
@@ -69,7 +74,7 @@ struct WeightView: View {
                             Button("", systemImage:"trash.fill", action:{
                                 context.delete(weights[findIndex(ID:weight.id, weights: weights)])
                             }).foregroundStyle(.red)
-                            modPicker(value:weight.weightvalue, weight: weight)
+                            modPicker(value:Int(weight.weightvalue.rounded(.down)), decimalValue: Int((weight.weightvalue.truncatingRemainder(dividingBy:1)*10).rounded()), weight: weight)
                         }
 
 //                        Menu{
@@ -107,6 +112,7 @@ struct WeightView: View {
 
 struct modPicker: View {
     @State var value: Int
+    @State var decimalValue: Int
     @Query private var weights: [Weight]
     let weight: Weight
     @Environment(\.modelContext) private var context
@@ -114,14 +120,25 @@ struct modPicker: View {
     var body: some View {
         let id: Int = weight.id
         let date: Date = weight.datetaken
-        Picker("", selection: $value) {
-            ForEach(0..<300) { i in
-                Text("\(i) lbs")
+        HStack{
+            Picker("", selection: $value) {
+                ForEach(0..<300) { i in
+                    Text(i.description)
+                }
+            }.onChange(of: value){
+                context.delete(weights[findIndex(ID: id, weights: weights)])
+                context.insert(Weight(id:id, weightvalue: Float(value + decimalValue/10), datetaken: date))
             }
-        }.onChange(of: value){
-            context.delete(weights[findIndex(ID: id, weights: weights)])
-            context.insert(Weight(id:id, weightvalue: value, datetaken: date))
+            Text(".").padding(.horizontal, -15.0)
+                
+            Picker("", selection: $decimalValue) {
+                ForEach(0...9, id: \.self) { i in
+                    Text("\(i)")
+                }
+            }.padding(.leading, -15.0)
+            Text("lbs").padding(.horizontal, -15.0)
         }
+
     }
 }
 

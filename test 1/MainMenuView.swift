@@ -148,8 +148,8 @@ func getFilteredWeights(data: [Weight], minDate: Date, maxDate: Date) -> [Weight
     return newList
 }
 
-func findMinWeight( weights: [Weight]) -> Int {
-    var minWeight: Int = 1000
+func findMinWeight( weights: [Weight]) -> Float {
+    var minWeight: Float = 1000
     for i in weights {
         if i.weightvalue < minWeight {
             minWeight = i.weightvalue
@@ -158,8 +158,8 @@ func findMinWeight( weights: [Weight]) -> Int {
     return minWeight
 }
 
-func findMaxWeight( weights: [Weight]) -> Int {
-    var maxWeight: Int = 0
+func findMaxWeight( weights: [Weight]) -> Float {
+    var maxWeight: Float = 0
     for i in weights {
         if i.weightvalue > maxWeight {
             maxWeight = i.weightvalue
